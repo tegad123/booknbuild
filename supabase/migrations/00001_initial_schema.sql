@@ -24,16 +24,6 @@ CREATE TYPE message_direction AS ENUM ('inbound', 'outbound');
 CREATE TYPE task_status AS ENUM ('queued', 'running', 'done', 'failed');
 
 -- ================================================
--- HELPER FUNCTION: get current user's active org_id
--- ================================================
-
-CREATE OR REPLACE FUNCTION auth_org_id() RETURNS uuid AS $$
-  SELECT org_id FROM public.user_orgs
-  WHERE user_id = auth.uid() AND is_active = true
-  LIMIT 1;
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
--- ================================================
 -- CORE TABLES
 -- ================================================
 
@@ -380,6 +370,16 @@ CREATE INDEX idx_events_org_id ON events (org_id);
 CREATE INDEX idx_events_lead_id ON events (lead_id);
 CREATE INDEX idx_events_type ON events (org_id, type);
 CREATE INDEX idx_events_created_at ON events (created_at DESC);
+
+-- ================================================
+-- HELPER FUNCTION (must come after user_orgs table)
+-- ================================================
+
+CREATE OR REPLACE FUNCTION auth_org_id() RETURNS uuid AS $$
+  SELECT org_id FROM public.user_orgs
+  WHERE user_id = auth.uid() AND is_active = true
+  LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- ================================================
 -- ROW LEVEL SECURITY
