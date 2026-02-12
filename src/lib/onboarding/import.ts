@@ -15,7 +15,7 @@ const brandSchema = z.object({
   logo_url: z.string().optional(),
   primary_color: z.string().optional(),
   accent_color: z.string().optional(),
-  reply_to: z.union([z.string().email(), z.literal("")]).optional(),
+  reply_to: z.string().optional(),
   support_phone: z.string().optional(),
 });
 
@@ -32,7 +32,7 @@ const integrationsSchema = z.object({
 });
 
 export const onboardingSchema = z.object({
-  company_name: z.string().trim().min(1, "Company name is required"),
+  company_name: z.string().trim(),
   owner_email: z.string().trim().email("Valid owner email is required"),
   contact_name: z.string().trim().optional(),
   contact_phone: z.string().trim().optional(),
@@ -230,6 +230,11 @@ export async function processOnboardingImport(
   supabase: SupabaseClient,
   payload: OnboardingPayload
 ) {
+  // Fallback: if company_name is empty, derive from owner_email
+  if (!payload.company_name) {
+    payload.company_name = payload.owner_email.split("@")[0] + "-co";
+  }
+
   const slug = payload.org_slug || slugify(payload.company_name);
 
   // 1. Check slug uniqueness

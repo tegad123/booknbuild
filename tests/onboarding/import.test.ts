@@ -188,13 +188,13 @@ describe("onboardingSchema (B)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects invalid reply_to email in brand", () => {
-    const invalid = {
+  it("accepts any string for reply_to in brand (relaxed for form data)", () => {
+    const withReplyTo = {
       ...MINIMAL_FIXTURE,
       brand: { reply_to: "bad-email" },
     };
-    const result = onboardingSchema.safeParse(invalid);
-    expect(result.success).toBe(false);
+    const result = onboardingSchema.safeParse(withReplyTo);
+    expect(result.success).toBe(true);
   });
 
   it("accepts integrations.twilio with sid/token/from_number", () => {
