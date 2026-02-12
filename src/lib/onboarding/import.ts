@@ -15,7 +15,7 @@ const brandSchema = z.object({
   logo_url: z.string().optional(),
   primary_color: z.string().optional(),
   accent_color: z.string().optional(),
-  reply_to: z.string().email().optional(),
+  reply_to: z.union([z.string().email(), z.literal("")]).optional(),
   support_phone: z.string().optional(),
 });
 
@@ -32,14 +32,24 @@ const integrationsSchema = z.object({
 });
 
 export const onboardingSchema = z.object({
-  company_name: z.string().min(1, "Company name is required"),
-  owner_email: z.string().email("Valid owner email is required"),
-  contact_name: z.string().optional(),
-  contact_phone: z.string().optional(),
+  company_name: z.string().trim().min(1, "Company name is required"),
+  owner_email: z.string().trim().email("Valid owner email is required"),
+  contact_name: z.string().trim().optional(),
+  contact_phone: z.string().trim().optional(),
   org_slug: z.string().min(1).optional(),
   niches: z
-    .array(z.enum(["fencing", "roofing", "concrete"]))
-    .min(1, "At least one niche is required"),
+    .union([
+      z.array(z.string()),
+      z.string(),
+    ])
+    .transform((val) => {
+      // Handle comma-separated string from forms: "Fencing, Roofing" → ["fencing","roofing"]
+      const arr = typeof val === "string" ? val.split(",").map((s) => s.trim()) : val;
+      return arr.map((s) => s.toLowerCase());
+    })
+    .pipe(
+      z.array(z.enum(["fencing", "roofing", "concrete"])).min(1, "At least one niche is required")
+    ),
   brand: brandSchema.default({}),
   integrations: integrationsSchema.optional(),
   org_config: z.record(z.string(), z.unknown()).default({}),
